@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Aplikasi catatan terenkripsi dengan deteksi bahasa otomatis">
+    <meta name="description" content="Aplikasi catatan terenkripsi dengan deteksi bahasa otomatis dan editor rich text">
     <meta name="theme-color" content="#667eea">
     <title>🔐 Encrypted Notes - Aplikasi Catatan Aman</title>
     <link rel="stylesheet" href="style.css">
@@ -17,7 +17,7 @@
                     <span id="darkModeIcon">🌙</span>
                 </button>
             </div>
-            <p>Aplikasi catatan dengan enkripsi berlapis & deteksi bahasa otomatis</p>
+            <p>Aplikasi catatan dengan enkripsi berlapis & editor rich text profesional</p>
         </header>
 
         <!-- LAYER 1: Password Setup -->
@@ -40,37 +40,33 @@
             </div>
         </div>
 
-        <!-- LAYER 1: Notes Input -->
+        <!-- LAYER 1: Notes Editor Section -->
         <div id="notesSection" class="layer hidden">
             <div class="card">
-                <h2>📝 Tulis Catatan Anda</h2>
+                <h2>📝 Rich Text Editor - Tulis Catatan Anda</h2>
+                <p>Editor profesional dengan formatting lengkap, pilihan font, dan warna background</p>
                 
-                <!-- Search Bar -->
+                <!-- Rich Text Editor akan di-inject di sini -->
+                <div id="editorContainer"></div>
+
+                <div class="button-group" style="margin-top: 20px;">
+                    <button onclick="saveNoteFromEditor()" class="btn btn-success">💾 Simpan Catatan</button>
+                    <button onclick="exportEditorAsHTML()" class="btn btn-info">📥 Export HTML</button>
+                    <button onclick="clearEditorDraft()" class="btn btn-warning">🗑️ Clear Draft</button>
+                    <button onclick="logout()" class="btn btn-danger">🚪 Logout</button>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="card">
+                <h2>🔍 Cari Catatan</h2>
                 <input 
                     type="text" 
                     id="searchInput" 
-                    placeholder="🔍 Cari catatan..." 
+                    placeholder="🔍 Ketik untuk mencari catatan..." 
                     onkeyup="searchNotes(this.value)"
                     aria-label="Search notes"
                 >
-
-                <!-- Add Note Form -->
-                <div class="form-group">
-                    <label for="noteInput">Isi Catatan:</label>
-                    <textarea 
-                        id="noteInput" 
-                        placeholder="Ketik catatan di sini... (deteksi bahasa ganda otomatis)"
-                        aria-label="Note content"
-                    ></textarea>
-                </div>
-
-                <!-- Detection Info Display -->
-                <div id="detectionInfo" class="text-center"></div>
-
-                <div class="button-group">
-                    <button id="submitNoteBtn" onclick="addNote()" class="btn btn-success">💾 Simpan Catatan</button>
-                    <button onclick="logout()" class="btn btn-danger">🚪 Logout</button>
-                </div>
             </div>
 
             <!-- Detection Alert -->
@@ -100,7 +96,7 @@
 
             <!-- Notes List -->
             <div class="card">
-                <h2>📋 Daftar Catatan</h2>
+                <h2>📋 Daftar Catatan Anda</h2>
                 <div id="notesList" class="notes-list"></div>
             </div>
         </div>
@@ -192,6 +188,7 @@
     <script src="encryption.js"></script>
     <script src="detection.js"></script>
     <script src="storage.js"></script>
+    <script src="editor.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
