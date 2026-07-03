@@ -1,4 +1,4 @@
-// Main Application Logic - Improved dengan accessibility & dark mode
+// Main Application Logic - Dengan Rich Text Editor Integration
 
 let currentState = 'menu';
 let isAuthenticated = false;
@@ -9,7 +9,6 @@ let isDarkMode = localStorage.getItem('darkMode') === 'true';
 // ===== DARK MODE SUPPORT =====
 
 function initDarkMode() {
-    // Check system preference
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     isDarkMode = localStorage.getItem('darkMode') === null ? prefersDark : localStorage.getItem('darkMode') === 'true';
     applyDarkMode();
@@ -24,8 +23,10 @@ function toggleDarkMode() {
 function applyDarkMode() {
     if (isDarkMode) {
         document.body.classList.add('dark-mode');
+        document.getElementById('darkModeIcon').textContent = '☀️';
     } else {
         document.body.classList.remove('dark-mode');
+        document.getElementById('darkModeIcon').textContent = '🌙';
     }
 }
 
@@ -43,7 +44,6 @@ function showLayer(layerId) {
             targetLayer.classList.remove('hidden');
             targetLayer.setAttribute('aria-hidden', 'false');
             
-            // Focus first input untuk accessibility
             const firstInput = targetLayer.querySelector('input, textarea, button');
             if (firstInput) {
                 setTimeout(() => firstInput.focus(), 100);
@@ -61,7 +61,6 @@ function showMenu() {
 
 function showCreateNew() {
     editingNoteId = null;
-    document.getElementById('submitNoteBtn').textContent = 'Simpan Catatan';
     showLayer('layer1');
     currentState = 'createNew';
 }
@@ -87,10 +86,8 @@ function resetForm() {
         document.getElementById('password2').value = '';
         document.getElementById('loginPassword1').value = '';
         document.getElementById('loginPassword2').value = '';
-        document.getElementById('noteInput').value = '';
         document.getElementById('detectionAlert').classList.add('hidden');
         document.getElementById('layer2Setup').classList.add('hidden');
-        document.getElementById('detectionInfo').innerHTML = '';
     } catch (e) {
         console.error('Error resetting form:', e);
     }
@@ -119,6 +116,13 @@ async function setupLayer1() {
                 document.getElementById('layer1').classList.add('hidden');
                 document.getElementById('notesSection').classList.remove('hidden');
                 document.getElementById('password1').value = '';
+                
+                // Initialize editor
+                if (!richTextEditor) {
+                    richTextEditor = new RichTextEditor('editorContainer');
+                }
+                richTextEditor.focus();
+                
                 renderNotesList();
             }, 1000);
         } else {
@@ -131,66 +135,47 @@ async function setupLayer1() {
     }
 }
 
-// ===== NOTES MANAGEMENT =====
+// ===== RICH TEXT EDITOR FUNCTIONS =====
 
-async function addNote() {
+async function saveNoteFromEditor() {
     try {
-        const noteInput = document.getElementById('noteInput');
-        const content = noteInput.value;
-        const detectionAlert = document.getElementById('detectionAlert');
-        const layer2Setup = document.getElementById('layer2Setup');
-        const detectionInfo = document.getElementById('detectionInfo');
+        if (!richTextEditor) {
+            alert('❌ Editor tidak siap!');
+            return;
+        }
 
-        if (!content.trim()) {
+        const content = richTextEditor.getContent();
+        
+        if (!content.text.trim()) {
             alert('📝 Tulis catatan terlebih dahulu!');
             return;
         }
 
-        // Detect languages dengan detail
-        const detection = detectionManager.getSummary(content);
+        // Detect languages dari text
+        const detection = detectionManager.getSummary(content.text);
         
-        // Show detection info
-        if (detection.detectionMessage) {
-            let detailHTML = `<strong>${detection.detectionMessage}</strong><br>`;
-            detailHTML += `<small>Total token: ${detection.tokenCount} | Confidence: ${detection.confidence}%</small><br>`;
-            
-            if (Object.keys(detection.confidenceScores).length > 0) {
-                detailHTML += '<small>Breakdown: ';
-                for (let [lang, score] of Object.entries(detection.confidenceScores)) {
-                    detailHTML += `${lang} (${score}%), `;
-                }
-                detailHTML = detailHTML.slice(0, -2) + '</small><br>';
-            }
-
-            if (detection.pronouns.length > 0) {
-                detailHTML += '<small>Pronoun: ' + detection.pronouns.map(p => p.word + '(' + p.count + 'x)').join(', ') + '</small><br>';
-            }
-
-            if (detection.tone && detection.tone.tone !== 'unknown') {
-                detailHTML += `<small>Tone: ${detection.tone.tone.toUpperCase()}</small>`;
-            }
-
-            detectionInfo.innerHTML = detailHTML;
-        }
-        
+        // Check if multiple languages
         if (detection.multipleLanguages) {
-            detectionAlert.classList.remove('hidden');
-            layer2Setup.classList.remove('hidden');
+            document.getElementById('detectionAlert').classList.remove('hidden');
+            document.getElementById('layer2Setup').classList.remove('hidden');
             requiresLayer2 = true;
-        } else {
-            await saveNoteToStorage(content, detection);
+            return;
         }
+
+        await saveNoteToDatabase(content, detection);
     } catch (e) {
-        console.error('Error in addNote:', e);
-        alert('❌ Terjadi kesalahan: ' + e.message);
+        console.error('Error saving note:', e);
+        alert('❌ Gagal menyimpan: ' + e.message);
     }
 }
 
-async function saveNoteToStorage(content, detection) {
+async function saveNoteToDatabase(content, detection) {
     try {
         const noteObj = {
-            title: content.substring(0, 50) + (content.length > 50 ? '...' : ''),
-            content: content,
+            title: content.text.substring(0, 50) + (content.text.length > 50 ? '...' : ''),
+            content: content.text,
+            htmlContent: content.html,
+            formatting: content.formatting,
             hasLayer2: requiresLayer2,
             languagesDetected: detection.languages,
             detectionInfo: detection.confidenceScores,
@@ -206,19 +191,21 @@ async function saveNoteToStorage(content, detection) {
         }
 
         if (result.success) {
-            document.getElementById('noteInput').value = '';
+            // Clear editor
+            richTextEditor.clearDraft();
+            richTextEditor.editor.innerHTML = '';
             document.getElementById('detectionAlert').classList.add('hidden');
             document.getElementById('layer2Setup').classList.add('hidden');
-            document.getElementById('detectionInfo').innerHTML = '';
             requiresLayer2 = false;
             
             alert('✅ ' + result.message);
             await renderNotesList();
+            richTextEditor.focus();
         } else {
             alert('❌ ' + result.message);
         }
     } catch (e) {
-        console.error('Error saving note:', e);
+        console.error('Error saving to database:', e);
         alert('❌ Gagal menyimpan: ' + e.message);
     }
 }
@@ -235,10 +222,10 @@ async function setupLayer2() {
         const result = await encryptionManager.setLayer2Password(password);
         
         if (result.success) {
-            const content = document.getElementById('noteInput').value;
-            const detection = detectionManager.getSummary(content);
+            const content = richTextEditor.getContent();
+            const detection = detectionManager.getSummary(content.text);
             
-            await saveNoteToStorage(content, detection);
+            await saveNoteToDatabase(content, detection);
             document.getElementById('password2').value = '';
         } else {
             alert('❌ ' + result.message);
@@ -248,6 +235,19 @@ async function setupLayer2() {
         alert('❌ Terjadi kesalahan: ' + e.message);
     }
 }
+
+function exportEditorAsHTML() {
+    if (!richTextEditor) return;
+    richTextEditor.exportAsHTML();
+    alert('✅ File HTML berhasil diunduh!');
+}
+
+function clearEditorDraft() {
+    if (!richTextEditor) return;
+    richTextEditor.clear();
+}
+
+// ===== NOTES LIST MANAGEMENT =====
 
 async function renderNotesList() {
     try {
@@ -285,12 +285,15 @@ async function editNote(id) {
         const note = await storageManager.getNoteById(id);
         if (note) {
             editingNoteId = id;
-            document.getElementById('noteInput').value = note.content;
-            document.getElementById('submitNoteBtn').textContent = 'Update Catatan';
             
-            // Scroll to input
-            document.getElementById('noteInput').scrollIntoView({ behavior: 'smooth' });
-            document.getElementById('noteInput').focus();
+            // Load into editor
+            if (richTextEditor) {
+                richTextEditor.setContent(note.htmlContent || note.content, note.formatting);
+            }
+            
+            // Scroll to editor
+            document.getElementById('editorContainer').scrollIntoView({ behavior: 'smooth' });
+            richTextEditor.focus();
         }
     } catch (e) {
         console.error('Error editing note:', e);
@@ -346,6 +349,13 @@ async function verifyLayer1() {
                     document.getElementById('loginLayer1').classList.add('hidden');
                     document.getElementById('notesSection').classList.remove('hidden');
                     document.getElementById('loginPassword1').value = '';
+                    
+                    // Initialize editor
+                    if (!richTextEditor) {
+                        richTextEditor = new RichTextEditor('editorContainer');
+                    }
+                    richTextEditor.focus();
+                    
                     renderNotesList();
                 }, 1000);
             }
@@ -383,6 +393,13 @@ async function verifyLayer2() {
                 document.getElementById('loginLayer2').classList.add('hidden');
                 document.getElementById('notesSection').classList.remove('hidden');
                 document.getElementById('loginPassword2').value = '';
+                
+                // Initialize editor
+                if (!richTextEditor) {
+                    richTextEditor = new RichTextEditor('editorContainer');
+                }
+                richTextEditor.focus();
+                
                 renderNotesList();
             }, 1000);
         } else {
@@ -454,7 +471,6 @@ function handleFileImport(event) {
         };
         reader.readAsText(file);
         
-        // Reset input
         event.target.value = '';
     } catch (e) {
         console.error('Error importing:', e);
@@ -499,20 +515,16 @@ async function searchNotes(query) {
 
 document.addEventListener('keydown', (e) => {
     try {
-        // Escape key untuk close
         if (e.key === 'Escape' && currentState !== 'menu') {
             backToMenu();
         }
         
-        // Enter key di form untuk submit (jika di input terakhir)
         if (e.key === 'Enter' && e.ctrlKey) {
             const activeElement = document.activeElement;
             if (activeElement.id === 'password1') {
                 setupLayer1();
             } else if (activeElement.id === 'password2') {
                 setupLayer2();
-            } else if (activeElement.id === 'noteInput') {
-                addNote();
             }
         }
     } catch (e) {
@@ -538,13 +550,13 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         initDarkMode();
         
-        // Check jika sudah ada password
         if (encryptionManager.hasLayer1()) {
             // User sudah pernah setup
         }
         
         showMenu();
-        console.log('🎯 Encrypted Notes App v2.0 - Siap digunakan!');
+        console.log('🎯 Encrypted Notes App v3.0 - Rich Text Editor Edition! ✨');
+        console.log('Features: 🔐 2-Layer Encryption, 📝 Rich Text Editing, 🎨 Custom Fonts & Colors');
     } catch (e) {
         console.error('Initialization error:', e);
     }
