@@ -3,24 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Keep Notes — Encrypted (no-backend)</title>
+  <title>Keep Notes — Encrypted</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main>
-    <h1>Keep Notes — Encrypted (no backend)</h1>
+    <h1>Keep Notes — Encrypted (client-side)</h1>
 
     <div class="row">
       <label>Password (shared):</label>
       <input id="password" type="password" placeholder="masukkan password...">
-      <button id="loadBtn">Buka dari URL</button>
-      <button id="genBtn">Encrypt & Generate Link</button>
-    </div>
-
-    <div class="row">
-      <button id="exportBtn">Export JSON</button>
-      <input id="importFile" type="file" accept="application/json">
-      <button id="clearBtn">Clear</button>
+      <button id="loadBtn">Buka</button>
+      <button id="saveBtn">Simpan</button>
     </div>
 
     <div id="status">Status: ready</div>
@@ -31,8 +25,6 @@
       <input id="shareLink" style="flex:1" readonly>
       <button id="copyBtn">Copy Link</button>
     </div>
-
-    <p class="hint">Catatan: semua enkripsi terjadi di browser. Jangan lupa password — jika lupa, data tidak bisa dipulihkan.</p>
   </main>
 
   <script src="js/crypto.js"></script>

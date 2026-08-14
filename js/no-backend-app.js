@@ -3,6 +3,7 @@
   const statusEl = id('status');
   const pwdEl = id('password');
   const genBtn = id('genBtn');
+  const saveBtn = id('saveBtn');
   const loadBtn = id('loadBtn');
   const exportBtn = id('exportBtn');
   const importFile = id('importFile');
@@ -11,19 +12,25 @@
   const shareLinkEl = id('shareLink');
   const copyBtn = id('copyBtn');
 
-  genBtn.addEventListener('click', generateLink);
-  loadBtn.addEventListener('click', loadFromUrl);
-  exportBtn.addEventListener('click', exportJson);
-  importFile.addEventListener('change', handleImport);
-  clearBtn.addEventListener('click', clearAll);
-  copyBtn.addEventListener('click', copyLink);
+  let autosaveTimer = null;
+  let lastPlain = '';
+
+  // bind buttons (support old ids)
+  if(genBtn) genBtn.addEventListener('click', generateLink);
+  if(saveBtn) saveBtn.addEventListener('click', generateLink); // alias for compatibility
+  if(loadBtn) loadBtn.addEventListener('click', loadFromUrl);
+  if(exportBtn) exportBtn.addEventListener('click', exportJson);
+  if(importFile) importFile.addEventListener('change', handleImport);
+  if(clearBtn) clearBtn.addEventListener('click', clearAll);
+  if(copyBtn) copyBtn.addEventListener('click', copyLink);
+  if(noteEl) noteEl.addEventListener('input', scheduleAutosave);
 
   // auto-load if fragment present
   window.addEventListener('load', async ()=>{
     const data = readFragment();
     if(data){
-      status('Data ditemukan di URL fragment. Masukkan password lalu tekan "Buka dari URL"');
-      shareLinkEl.value = window.location.href;
+      status('Data ditemukan di URL fragment. Masukkan password lalu tekan "Buka"');
+      if(shareLinkEl) shareLinkEl.value = window.location.href;
     }
   });
 
@@ -38,7 +45,8 @@
       // set fragment
       location.hash = 'd='+b64url;
       const link = location.href;
-      shareLinkEl.value = link;
+      if(shareLinkEl) shareLinkEl.value = link;
+      lastPlain = text;
       status('Sukses. Bagikan link + password.');
     }catch(err){
       console.error(err);
@@ -55,6 +63,7 @@
     try{
       const plain = await decryptObject(data, pwd);
       noteEl.value = plain;
+      lastPlain = plain;
       status('Berhasil dibuka.');
     }catch(err){
       console.error(err);
@@ -100,7 +109,7 @@
         // encode into fragment
         const b64url = objToBase64Url(obj);
         location.hash = 'd='+b64url;
-        shareLinkEl.value = location.href;
+        if(shareLinkEl) shareLinkEl.value = location.href;
         status('File diimpor. Link diperbarui.');
       }catch(err){
         console.error(err);
@@ -114,13 +123,37 @@
     location.hash = '';
     noteEl.value = '';
     pwdEl.value = '';
-    shareLinkEl.value = '';
+    if(shareLinkEl) shareLinkEl.value = '';
+    localStorage.removeItem('keepnotes_pwd');
     status('Cleared.');
   }
 
   function copyLink(){
-    if(!shareLinkEl.value){status('Tidak ada link untuk disalin.'); return}
+    if(!shareLinkEl || !shareLinkEl.value){status('Tidak ada link untuk disalin.'); return}
     navigator.clipboard.writeText(shareLinkEl.value).then(()=>status('Link disalin.'), ()=>status('Gagal menyalin link.'));
+  }
+
+  // Autosave: debounce encrypt when user stops typing for 1.5s
+  function scheduleAutosave(){
+    if(autosaveTimer) clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(async ()=>{
+      const pwd = pwdEl.value || '';
+      if(!pwd) { status('Autosave: password kosong.'); return }
+      const text = noteEl.value || '';
+      if(text === lastPlain) { status('Autosave: tidak ada perubahan.'); return }
+      status('Autosave: mengenkripsi...');
+      try{
+        const obj = await encryptText(text, pwd);
+        const b64url = objToBase64Url(obj);
+        location.hash = 'd='+b64url;
+        if(shareLinkEl) shareLinkEl.value = location.href;
+        lastPlain = text;
+        status('Autosave: tersimpan ke URL.');
+      }catch(err){
+        console.error(err);
+        status('Autosave gagal (mungkin password salah).');
+      }
+    },1500);
   }
 
   function id(s){return document.getElementById(s)}
