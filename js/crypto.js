@@ -2,6 +2,7 @@
 // deriveKey(password, salt) => CryptoKey
 // encryptText(plaintext, password) => {ciphertext_b64, salt_b64, iv_b64}
 // decryptObject(obj, password) => plaintext
+// helpers: objToBase64Url(obj) and base64UrlToObj(str)
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -48,4 +49,25 @@ async function decryptObject(obj, password){
   const key = await deriveKey(password, saltBuf);
   const plainBuf = await crypto.subtle.decrypt({name:'AES-GCM', iv: ivBuf}, key, ctBuf);
   return decoder.decode(plainBuf);
+}
+
+// base64url helpers for compact URL fragments
+function objToBase64Url(obj){
+  const s = JSON.stringify(obj);
+  const bytes = encoder.encode(s);
+  let b64 = btoa(String.fromCharCode(...new Uint8Array(bytes)));
+  // base64url
+  b64 = b64.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  return b64;
+}
+
+function base64UrlToObj(b64url){
+  let b64 = b64url.replace(/-/g,'+').replace(/_/g,'/');
+  // pad
+  while(b64.length % 4) b64 += '=';
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+  const s = decoder.decode(arr);
+  return JSON.parse(s);
 }

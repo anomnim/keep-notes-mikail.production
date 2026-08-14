@@ -1,19 +1,2 @@
-// Placeholder config — REPLACE the values with your Firebase web config.
-// Example (fill with values from Firebase console -> Project settings -> Your apps -> SDK):
-// window.firebaseConfig = {
-//   apiKey: "...",
-//   authDomain: "...",
-//   projectId: "...",
-//   storageBucket: "...",
-//   messagingSenderId: "...",
-//   appId: "..."
-// };
-
-window.firebaseConfig = window.firebaseConfig || {
-  apiKey: "REPLACE_ME",
-  authDomain: "REPLACE_ME",
-  projectId: "REPLACE_ME",
-  storageBucket: "REPLACE_ME",
-  messagingSenderId: "REPLACE_ME",
-  appId: "REPLACE_ME"
-};
+// previously config.js used for Firebase. This project now uses no-backend mode that stores ciphertext in the URL fragment.
+// You can safely ignore this file. If you previously set firebase config, it's no longer required for no-backend usage.
