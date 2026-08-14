@@ -1,194 +1,35 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Aplikasi catatan terenkripsi dengan deteksi bahasa otomatis dan editor rich text">
-    <meta name="theme-color" content="#667eea">
-    <title>🔐 Encrypted Notes - Aplikasi Catatan Aman</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Keep Notes — Encrypted</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="header-top">
-                <h1>🔐 Encrypted Notes</h1>
-                <button class="dark-mode-toggle" onclick="toggleDarkMode()" aria-label="Toggle dark mode">
-                    <span id="darkModeIcon">🌙</span>
-                </button>
-            </div>
-            <p>Aplikasi catatan dengan enkripsi berlapis & editor rich text profesional</p>
-        </header>
+  <main>
+    <h1>Keep Notes — Encrypted (client-side)</h1>
 
-        <!-- LAYER 1: Password Setup -->
-        <div id="layer1" class="layer">
-            <div class="card">
-                <h2>🔐 Layer 1: Setup Password Utama</h2>
-                <p>Buat password utama untuk melindungi semua catatan Anda</p>
-                <div class="form-group">
-                    <label for="password1">Password Layer 1 (min 6 karakter):</label>
-                    <input 
-                        type="password" 
-                        id="password1" 
-                        placeholder="Buat password yang kuat..." 
-                        aria-label="Password Layer 1"
-                        onkeypress="if(event.key==='Enter') setupLayer1()"
-                    >
-                </div>
-                <button onclick="setupLayer1()" class="btn btn-primary">🔒 Setup Layer 1</button>
-                <p id="layer1Status" class="status" role="status"></p>
-            </div>
-        </div>
-
-        <!-- LAYER 1: Notes Editor Section -->
-        <div id="notesSection" class="layer hidden">
-            <div class="card">
-                <h2>📝 Rich Text Editor - Tulis Catatan Anda</h2>
-                <p>Editor profesional dengan formatting lengkap, pilihan font, dan warna background</p>
-                
-                <!-- Rich Text Editor akan di-inject di sini -->
-                <div id="editorContainer"></div>
-
-                <div class="button-group" style="margin-top: 20px;">
-                    <button onclick="saveNoteFromEditor()" class="btn btn-success">💾 Simpan Catatan</button>
-                    <button onclick="exportEditorAsHTML()" class="btn btn-info">📥 Export HTML</button>
-                    <button onclick="clearEditorDraft()" class="btn btn-warning">🗑️ Clear Draft</button>
-                    <button onclick="logout()" class="btn btn-danger">🚪 Logout</button>
-                </div>
-            </div>
-
-            <!-- Search Bar -->
-            <div class="card">
-                <h2>🔍 Cari Catatan</h2>
-                <input 
-                    type="text" 
-                    id="searchInput" 
-                    placeholder="🔍 Ketik untuk mencari catatan..." 
-                    onkeyup="searchNotes(this.value)"
-                    aria-label="Search notes"
-                >
-            </div>
-
-            <!-- Detection Alert -->
-            <div id="detectionAlert" class="alert alert-warning hidden" role="alert">
-                <strong>⚠️ Deteksi Bahasa Ganda!</strong>
-                <p>Catatan Anda menggunakan lebih dari satu bahasa. Sistem akan meminta password Layer 2 untuk keamanan ekstra.</p>
-            </div>
-
-            <!-- LAYER 2: Password Setup (Triggered) -->
-            <div id="layer2Setup" class="layer hidden">
-                <div class="card">
-                    <h2>🔐 Layer 2: Password Keamanan Ekstra</h2>
-                    <p>Catatan Anda terdeteksi memiliki bahasa ganda. Setup password Layer 2 untuk proteksi tambahan:</p>
-                    <div class="form-group">
-                        <label for="password2">Password Layer 2 (min 6 karakter):</label>
-                        <input 
-                            type="password" 
-                            id="password2" 
-                            placeholder="Buat password kedua..." 
-                            aria-label="Password Layer 2"
-                            onkeypress="if(event.key==='Enter') setupLayer2()"
-                        >
-                    </div>
-                    <button onclick="setupLayer2()" class="btn btn-primary">🔒 Setup Layer 2</button>
-                </div>
-            </div>
-
-            <!-- Notes List -->
-            <div class="card">
-                <h2>📋 Daftar Catatan Anda</h2>
-                <div id="notesList" class="notes-list"></div>
-            </div>
-        </div>
-
-        <!-- LOGIN: Layer 1 -->
-        <div id="loginLayer1" class="layer hidden">
-            <div class="card">
-                <h2>🔓 Login - Layer 1</h2>
-                <p>Masukkan password Layer 1 untuk akses catatan Anda</p>
-                <div class="form-group">
-                    <label for="loginPassword1">Password Layer 1:</label>
-                    <input 
-                        type="password" 
-                        id="loginPassword1" 
-                        placeholder="Masukkan password Layer 1..." 
-                        aria-label="Login password Layer 1"
-                        onkeypress="if(event.key==='Enter') verifyLayer1()"
-                    >
-                </div>
-                <div class="button-group">
-                    <button onclick="verifyLayer1()" class="btn btn-primary">🔓 Login</button>
-                    <button onclick="backToMenu()" class="btn btn-secondary">↩️ Kembali</button>
-                </div>
-                <p id="loginStatus1" class="status" role="status"></p>
-            </div>
-        </div>
-
-        <!-- LOGIN: Layer 2 -->
-        <div id="loginLayer2" class="layer hidden">
-            <div class="card">
-                <h2>🔐 Login - Layer 2 (Keamanan Ekstra)</h2>
-                <p>Catatan Anda dilindungi Layer 2. Masukkan password kedua:</p>
-                <div class="form-group">
-                    <label for="loginPassword2">Password Layer 2:</label>
-                    <input 
-                        type="password" 
-                        id="loginPassword2" 
-                        placeholder="Masukkan password Layer 2..." 
-                        aria-label="Login password Layer 2"
-                        onkeypress="if(event.key==='Enter') verifyLayer2()"
-                    >
-                </div>
-                <div class="button-group">
-                    <button onclick="verifyLayer2()" class="btn btn-primary">🔓 Unlock</button>
-                    <button onclick="backToMenu()" class="btn btn-secondary">↩️ Kembali</button>
-                </div>
-                <p id="loginStatus2" class="status" role="status"></p>
-            </div>
-        </div>
-
-        <!-- Main Menu (Initial) -->
-        <div id="mainMenu" class="layer">
-            <div class="card">
-                <h2>📱 Menu Utama</h2>
-                <p>Selamat datang di Encrypted Notes! Pilih aksi yang ingin Anda lakukan:</p>
-                <div class="button-group">
-                    <button onclick="showCreateNew()" class="btn btn-success">📝 Buat Notes Baru</button>
-                    <button onclick="showLogin()" class="btn btn-info">🔓 Buka Notes</button>
-                    <button onclick="showExport()" class="btn btn-warning">💾 Backup & Restore</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Export Section -->
-        <div id="exportSection" class="layer hidden">
-            <div class="card">
-                <h2>💾 Backup & Restore Data</h2>
-                <p>Backup catatan Anda ke file atau restore dari file yang sudah dibuat sebelumnya:</p>
-                
-                <div class="button-group">
-                    <button onclick="exportToFile()" class="btn btn-success">📥 Download Backup</button>
-                    <button onclick="importFromFile()" class="btn btn-info">📤 Upload Backup</button>
-                    <button onclick="backToMenu()" class="btn btn-secondary">↩️ Kembali</button>
-                </div>
-                
-                <input 
-                    type="file" 
-                    id="importFile" 
-                    accept=".json" 
-                    style="display:none;" 
-                    onchange="handleFileImport(event)"
-                    aria-label="Import notes file"
-                >
-            </div>
-        </div>
+    <div class="row">
+      <label>Password (shared):</label>
+      <input id="password" type="password" placeholder="masukkan password...">
+      <button id="loadBtn">Buka</button>
+      <button id="saveBtn">Simpan</button>
     </div>
 
-    <!-- Scripts -->
-    <script src="encryption.js"></script>
-    <script src="detection.js"></script>
-    <script src="storage.js"></script>
-    <script src="editor.js"></script>
-    <script src="script.js"></script>
+    <div id="status">Status: ready</div>
+
+    <textarea id="note" placeholder="Tulis catatan di sini..." rows="15"></textarea>
+  </main>
+
+  <!-- Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <!-- User must provide firebase config in this file -->
+  <script src="config.js"></script>
+
+  <script src="js/crypto.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
