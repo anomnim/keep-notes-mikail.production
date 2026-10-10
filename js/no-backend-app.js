@@ -18,11 +18,49 @@
   const togglePwdBtn = id('togglePwd');
   const charCountEl = id('charCount');
   const tabWrite = id('tabWrite');
-  const tabPreview = id('tabPreview');
   const previewEl = id('preview');
+  const themeToggle = id('themeToggle');
 
   let autosaveTimer = null;
   let lastPlain = '';
+
+  // Theme (Dark / Light) initialization
+  initTheme();
+
+  function initTheme() {
+    const saved = localStorage.getItem('keepnotes_theme');
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const theme = saved || (prefersDark ? 'dark' : 'light');
+    setTheme(theme);
+
+    if (themeToggle) {
+      themeToggle.addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+        const next = cur === 'dark' ? 'light' : 'dark';
+        setTheme(next);
+      });
+    }
+  }
+
+  function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('keepnotes_theme', theme);
+    if (themeToggle) {
+      themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+      themeToggle.title = theme === 'dark' ? 'Ganti ke Light Mode' : 'Ganti ke Dark Mode';
+    }
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) metaTheme.setAttribute('content', theme === 'dark' ? '#0f172a' : '#2563eb');
+  }
+
+  // Register PWA Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch((err) => {
+        console.warn('Service Worker registration skipped:', err);
+      });
+    });
+  }
 
   // bind buttons (support old ids)
   if(genBtn) genBtn.addEventListener('click', generateLink);

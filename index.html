@@ -1,14 +1,24 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0f172a">
   <title>Keep Notes — Encrypted</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main>
-    <h1>Keep Notes — Encrypted (client-side)</h1>
+  <main class="glass-card">
+    <header class="app-header">
+      <div class="logo-wrap">
+        <span class="logo-badge">🔒</span>
+        <h1>Keep Notes</h1>
+      </div>
+      <button type="button" id="themeToggle" class="btn-theme" title="Ganti Tema (Dark/Light)" aria-label="Ganti Tema">🌙</button>
+    </header>
 
     <div class="row password-row">
       <label for="password">Password (shared):</label>
