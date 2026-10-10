@@ -149,7 +149,7 @@
   });
 
   async function generateLink(){
-    const pwd = pwdEl.value || '';
+    const pwd = (pwdEl.value || '').trim();
     if(!pwd){status('Masukkan password terlebih dahulu.', 'error'); pwdEl.focus(); return}
     const text = noteEl.value || '';
     status('Mengenkripsi...', 'info');
@@ -169,10 +169,10 @@
   }
 
   async function loadFromUrl(){
-    const pwd = pwdEl.value || '';
+    const pwd = (pwdEl.value || '').trim();
     if(!pwd){status('Masukkan password untuk membuka.', 'error'); pwdEl.focus(); return}
     const data = readFragment();
-    if(!data){status('Tidak ada data terenkripsi di URL.', 'error'); return}
+    if(!data){status('Tidak ada data terenkripsi yang valid di URL.', 'error'); return}
     status('Mendekripsi catatan...', 'info');
     try{
       const plain = await decryptObject(data, pwd);
@@ -182,21 +182,37 @@
       updateCharCount();
       status('Catatan berhasil dibuka.', 'success');
     }catch(err){
-      console.error(err);
-      status('Gagal membuka — password salah atau data rusak.', 'error');
+      console.error('Decryption failed detail:', err);
+      status('Gagal membuka — kemungkinan password salah atau data di URL terpotong/rusak.', 'error');
     }
   }
 
   function readFragment(){
-    if(!location.hash) return null;
-    const h = location.hash.replace(/^#/, '');
-    const m = h.match(/(^|&)d=([^&]+)/);
+    // Read from location.hash or window.location.href fallback
+    const rawUrl = window.location.href;
+    const hashIndex = rawUrl.indexOf('#');
+    if(hashIndex === -1) return null;
+    let h = rawUrl.substring(hashIndex + 1);
+    
+    // Match d parameter: allow trailing characters cleanup
+    const m = h.match(/(^|&)d=([^&#]+)/);
     if(!m) return null;
+
+    let payloadStr = m[2];
+    // Clean trailing slashes or URL query artifacts if added by external apps
+    payloadStr = payloadStr.replace(/\/+$/, '');
+
     try{
-      return base64UrlToObj(decodeURIComponent(m[2]));
-    }catch(e){
-      console.error('parse fragment failed', e);
-      return null;
+      // Try direct base64url decoding first
+      return base64UrlToObj(payloadStr);
+    }catch(e1){
+      try{
+        // Try URI decoded version if percent-encoded by browser
+        return base64UrlToObj(decodeURIComponent(payloadStr));
+      }catch(e2){
+        console.error('parse fragment failed', e1, e2);
+        return null;
+      }
     }
   }
 
@@ -282,7 +298,7 @@
   function scheduleAutosave(){
     if(autosaveTimer) clearTimeout(autosaveTimer);
     autosaveTimer = setTimeout(async ()=>{
-      const pwd = pwdEl.value || '';
+      const pwd = (pwdEl.value || '').trim();
       if(!pwd) return;
       const text = noteEl.value || '';
       if(text === lastPlain) return;

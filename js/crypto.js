@@ -32,22 +32,30 @@ async function deriveKey(password, salt, iterations = 120000){
 
 async function compressData(bytes) {
   if (typeof CompressionStream !== 'undefined') {
-    const cs = new CompressionStream('deflate-raw');
-    const writer = cs.writable.getWriter();
-    writer.write(bytes);
-    writer.close();
-    return new Uint8Array(await new Response(cs.readable).arrayBuffer());
+    try {
+      const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate'));
+      const buf = await new Response(stream).arrayBuffer();
+      return new Uint8Array(buf);
+    } catch (e) {
+      console.warn('CompressionStream failed, falling back to uncompressed', e);
+      return bytes;
+    }
   }
   return bytes;
 }
 
 async function decompressData(bytes) {
   if (typeof DecompressionStream !== 'undefined') {
-    const ds = new DecompressionStream('deflate-raw');
-    const writer = ds.writable.getWriter();
-    writer.write(bytes);
-    writer.close();
-    return new Uint8Array(await new Response(ds.readable).arrayBuffer());
+    // try standard deflate first, then deflate-raw if available
+    for (const fmt of ['deflate', 'deflate-raw']) {
+      try {
+        const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream(fmt));
+        const buf = await new Response(stream).arrayBuffer();
+        return new Uint8Array(buf);
+      } catch (e) {
+        // try next format
+      }
+    }
   }
   return bytes;
 }
@@ -56,13 +64,25 @@ async function encryptText(plaintext, password){
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await deriveKey(password, salt.buffer);
-  const compressed = await compressData(encoder.encode(plaintext));
-  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv: iv}, key, compressed);
+  const plainBytes = encoder.encode(plaintext);
+  let payload = plainBytes;
+  let isCmp = 0;
+
+  if (typeof CompressionStream !== 'undefined') {
+    const compressed = await compressData(plainBytes);
+    // only use compressed if it actually saved space
+    if (compressed.length < plainBytes.length) {
+      payload = compressed;
+      isCmp = 1;
+    }
+  }
+
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv: iv}, key, payload);
   return {
     ciphertext: toBase64(ct),
     salt: toBase64(salt.buffer),
     iv: toBase64(iv.buffer),
-    cmp: 1
+    cmp: isCmp
   };
 }
 
