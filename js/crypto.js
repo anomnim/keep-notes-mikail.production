@@ -30,15 +30,39 @@ async function deriveKey(password, salt, iterations = 120000){
   );
 }
 
+async function compressData(bytes) {
+  if (typeof CompressionStream !== 'undefined') {
+    const cs = new CompressionStream('deflate-raw');
+    const writer = cs.writable.getWriter();
+    writer.write(bytes);
+    writer.close();
+    return new Uint8Array(await new Response(cs.readable).arrayBuffer());
+  }
+  return bytes;
+}
+
+async function decompressData(bytes) {
+  if (typeof DecompressionStream !== 'undefined') {
+    const ds = new DecompressionStream('deflate-raw');
+    const writer = ds.writable.getWriter();
+    writer.write(bytes);
+    writer.close();
+    return new Uint8Array(await new Response(ds.readable).arrayBuffer());
+  }
+  return bytes;
+}
+
 async function encryptText(plaintext, password){
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await deriveKey(password, salt.buffer);
-  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv: iv}, key, encoder.encode(plaintext));
+  const compressed = await compressData(encoder.encode(plaintext));
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv: iv}, key, compressed);
   return {
     ciphertext: toBase64(ct),
     salt: toBase64(salt.buffer),
-    iv: toBase64(iv.buffer)
+    iv: toBase64(iv.buffer),
+    cmp: 1
   };
 }
 
@@ -47,8 +71,12 @@ async function decryptObject(obj, password){
   const ivBuf = fromBase64(obj.iv);
   const ctBuf = fromBase64(obj.ciphertext);
   const key = await deriveKey(password, saltBuf);
-  const plainBuf = await crypto.subtle.decrypt({name:'AES-GCM', iv: ivBuf}, key, ctBuf);
-  return decoder.decode(plainBuf);
+  const decryptedBuf = await crypto.subtle.decrypt({name:'AES-GCM', iv: ivBuf}, key, ctBuf);
+  if (obj.cmp === 1) {
+    const decompressed = await decompressData(new Uint8Array(decryptedBuf));
+    return decoder.decode(decompressed);
+  }
+  return decoder.decode(decryptedBuf);
 }
 
 // base64url helpers for compact URL fragments

@@ -10,23 +10,55 @@
   <main>
     <h1>Keep Notes — Encrypted (client-side)</h1>
 
-    <div class="row">
-      <label>Password (shared):</label>
-      <input id="password" type="password" placeholder="masukkan password...">
-      <button id="loadBtn">Buka</button>
-      <button id="saveBtn">Simpan</button>
+    <div class="row password-row">
+      <label for="password">Password (shared):</label>
+      <div class="pwd-input-wrap">
+        <input id="password" type="password" placeholder="masukkan password...">
+        <button type="button" id="togglePwd" class="btn-icon" title="Lihat password" aria-label="Lihat password">👁</button>
+      </div>
+      <button id="loadBtn" class="btn-primary">Buka</button>
+      <button id="saveBtn" class="btn-secondary">Simpan</button>
     </div>
 
-    <div id="status">Status: ready</div>
+    <div id="status" class="status-box">Status: ready</div>
 
-    <textarea id="note" placeholder="Tulis catatan di sini..." rows="15"></textarea>
+    <div class="editor-header">
+      <div class="tabs">
+        <button type="button" id="tabWrite" class="tab-btn active">Tulis (Markdown)</button>
+        <button type="button" id="tabPreview" class="tab-btn">Preview</button>
+      </div>
+    </div>
+
+    <textarea id="note" placeholder="Tulis catatan (mendukung markdown: # Heading, **tebal**, - list, `code`)..." rows="14"></textarea>
+    <div id="preview" class="markdown-body" style="display:none"></div>
 
     <div class="row">
-      <input id="shareLink" style="flex:1" readonly>
+      <input id="shareLink" style="flex:1" readonly placeholder="Link terenkripsi akan muncul di sini...">
       <button id="copyBtn">Copy Link</button>
+      <button id="qrBtn" class="btn-outline" title="Tampilkan QR Code untuk scan di HP">📱 QR Code</button>
+    </div>
+
+    <div id="qrModal" class="qr-modal" style="display:none">
+      <div class="qr-card">
+        <h3>Scan untuk Buka di HP</h3>
+        <p class="qr-sub">Scan menggunakan kamera HP untuk langsung membuka catatan terenkripsi ini.</p>
+        <div id="qrContainer"></div>
+        <button id="closeQrBtn" class="btn-secondary" style="margin-top:14px">Tutup</button>
+      </div>
+    </div>
+
+    <div class="row actions-row">
+      <button id="exportBtn" class="btn-outline">Export JSON</button>
+      <label for="importFile" class="btn-outline file-btn">
+        Import JSON
+        <input id="importFile" type="file" accept=".json,application/json" style="display:none">
+      </label>
+      <button id="clearBtn" class="btn-danger">Clear All</button>
+      <span id="charCount" class="meta-info">0 karakter</span>
     </div>
   </main>
 
+  <script src="js/qrcode.min.js"></script>
   <script src="js/crypto.js"></script>
   <script src="js/no-backend-app.js"></script>
 </body>
