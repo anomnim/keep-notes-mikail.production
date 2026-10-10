@@ -4,13 +4,17 @@
 // 2. "/notes" -> Redirect ke "/notes/"
 // 3. "/notes/*" -> Menyajikan file statis aplikasi Keep Notes
 
+import { LANDING_HTML } from './landing.js';
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // 1. Root "/" -> Landing page "Sedang Dibangun"
-    if (url.pathname === '/' || url.pathname === '') {
-      return env.ASSETS.fetch(new Request(new URL('/landing.html', request.url), request));
+    // 1. Root "/" atau "/landing" -> Tampilkan landing page langsung
+    if (url.pathname === '/' || url.pathname === '' || url.pathname === '/landing' || url.pathname === '/landing.html') {
+      return new Response(LANDING_HTML, {
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      });
     }
 
     // 2. Akses "/notes" tanpa trailing slash -> Redirect 301 ke "/notes/"
@@ -31,12 +35,7 @@ export default {
       return Response.redirect(`${url.origin}/notes/${url.search}${url.hash}`, 301);
     }
 
-    // 5. Akses langsung ke "/landing.html"
-    if (url.pathname === '/landing.html') {
-      return env.ASSETS.fetch(request);
-    }
-
-    // 6. Path lainnya -> 404
+    // 5. Path lainnya -> 404
     return new Response('Halaman tidak ditemukan', {
       status: 404,
       headers: { 'Content-Type': 'text/plain; charset=utf-8' }

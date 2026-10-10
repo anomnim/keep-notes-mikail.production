@@ -1,0 +1,166 @@
+export const LANDING_HTML = `<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f172a">
+  <title>Website Mikail — Segera Hadir</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="/notes/icons/icon-192.png">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 50%, #020617 100%);
+      color: #f8fafc;
+      padding: 24px;
+    }
+    .container {
+      width: 100%;
+      max-width: 540px;
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      padding: 36px 30px;
+      box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.5), 0 0 1px 1px rgba(255, 255, 255, 0.08);
+      text-align: center;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(96, 165, 250, 0.3);
+      color: #93c5fd;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      margin-bottom: 20px;
+    }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: #38bdf8;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #38bdf8;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+    h1 {
+      font-size: 1.85rem;
+      font-weight: 700;
+      line-height: 1.25;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    p.lead {
+      color: #94a3b8;
+      font-size: 0.98rem;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+    .featured-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 20px;
+      text-align: left;
+      margin-bottom: 24px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .featured-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(96, 165, 250, 0.4);
+    }
+    .featured-tag {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #38bdf8;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .featured-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #f1f5f9;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .featured-desc {
+      font-size: 0.88rem;
+      color: #94a3b8;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      background: #2563eb;
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 12px 20px;
+      border-radius: 10px;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-action:hover {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+    }
+    footer {
+      font-size: 0.78rem;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="badge">
+      <span class="pulse-dot"></span>
+      Sedang Dalam Tahap Pembangunan
+    </div>
+    <h1>Website Mikail</h1>
+    <p class="lead">
+      Halo! Terima kasih sudah berkunjung. Halaman utama sedang disiapkan untuk menampilkan portofolio dan proyek-proyek seru Mikail.
+    </p>
+
+    <div class="featured-card">
+      <div class="featured-tag">Karya Pilihan</div>
+      <div class="featured-title">🔒 Keep Notes — Encrypted</div>
+      <div class="featured-desc">
+        Aplikasi catatan terenkripsi langsung di browser (client-side AES-GCM). Aman, tanpa backend, dan mendukung mode offline.
+      </div>
+      <a href="/notes/" class="btn-action">
+        Buka Keep Notes &rarr;
+      </a>
+    </div>
+
+    <footer>
+      Dibuat dengan ❤️ oleh Mikail &bull; anom.my.id
+    </footer>
+  </div>
+</body>
+</html>`;
